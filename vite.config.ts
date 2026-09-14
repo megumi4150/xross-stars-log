@@ -23,7 +23,8 @@ export default defineConfig({
           },
         ],
       },
-      workbox: { navigateFallback: "index.html" },
+      // Activate a deployed UI immediately instead of leaving an obsolete worker active.
+      workbox: { navigateFallback: "index.html", skipWaiting: true, clientsClaim: true },
     }),
   ],
 });
