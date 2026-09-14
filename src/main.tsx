@@ -98,16 +98,17 @@ function Recorder({
     [type, setType] = useState<"フリー" | "大会">("フリー"),
     [event, setEvent] = useState(""),
     [version, setVersion] = useState(data.versions[0]?.id || ""),
-    [leaders, setLeaders] = useState<string[]>([]),
+    [leaders, setLeaders] = useState<Card[]>([]),
     [ace, setAce] = useState(""),
     [r, setR] = useState<Round[]>([]),
+    [firstOrder, setFirstOrder] = useState<"先攻" | "後攻" | "">(""),
     [note, setNote] = useState("");
   const addRound = (result: "WIN" | "LOSE") => {
     if (r.filter((x) => x.result === result).length >= 2 || r.length >= 3)
       return;
+    if (!firstOrder) return;
     const prev = r.at(-1);
-    const order =
-      r.length === 0 ? "先攻" : prev!.result === "LOSE" ? "先攻" : "後攻";
+    const order = r.length === 0 ? firstOrder : prev!.result === "LOSE" ? "先攻" : "後攻";
     setR([
       ...r,
       {
@@ -120,24 +121,29 @@ function Recorder({
       },
     ]);
   };
+  const removeRound = (id: string) => {
+    setR((current) => current.filter((round) => round.id !== id));
+  };
   const reset = () => {
     setLeaders([]);
     setAce("");
     setR([]);
+    setFirstOrder("");
     setNote("");
   };
   const submit = (next: boolean) => {
-    if (!version || r.length < 2 || !leaders.length) {
+    if (!version || r.length < 2 || leaders.length !== 4) {
       alert("使用デッキ・相手Leader・最低2ラウンドを入力してください");
       return;
     }
     const wins = r.filter((x) => x.result === "WIN").length,
       opponent: Opponent = {
         id: uid(),
-        leaderIds: leaders,
-        leaders,
+        leaderIds: leaders.map((leader) => leader.id),
+        leaders: leaders.map((leader) => leader.name),
+        leaderCards: leaders,
         aces: ace ? [{ cardId: ace, name: ace, count: "?" }] : [],
-        displayLabel: leaders.join(" / "),
+        displayLabel: leaders.map((leader) => leader.name).join(" / "),
         lastUsedAt: new Date().toISOString(),
       };
     const match: Match = {
@@ -163,6 +169,9 @@ function Recorder({
     if (next) reset();
   };
   const v = data.versions.find((x) => x.id === version);
+  const leaderCatalog = Array.from(
+    new Map(data.versions.flatMap((deckVersion) => deckVersion.leaders).map((card) => [card.id, card])).values(),
+  );
   return (
     <section>
       <h1>対戦を記録</h1>
@@ -228,19 +237,8 @@ function Recorder({
       </div>
       <div className="card">
         <h2>相手構成</h2>
-        <input
-          placeholder="Leader 4枚（例：橘ひなの / うるか …）"
-          value={leaders.join(" / ")}
-          onChange={(e) =>
-            setLeaders(
-              e.target.value
-                .split("/")
-                .map((x) => x.trim())
-                .filter(Boolean)
-                .slice(0, 4),
-            )
-          }
-        />
+        <p className="hint">リーダー一覧から、相手の4枚を順に選択してください（{leaders.length}/4）</p>
+        <LeaderChoice cards={leaderCatalog} selected={leaders} onChange={setLeaders} />
         <input
           placeholder="ACE（不明なら空欄でOK）"
           value={ace}
@@ -252,7 +250,7 @@ function Recorder({
               <button
                 key={o.id}
                 onClick={() => {
-                  setLeaders(o.leaders);
+                  setLeaders(o.leaderCards || o.leaders.map((name, i) => ({ id: o.leaderIds[i] || `saved-${o.id}-${i}`, name, cardType: "leader" })));
                   setAce(o.aces[0]?.name || "");
                 }}
               >
@@ -264,8 +262,20 @@ function Recorder({
       </div>
       <div className="card">
         <h2>
-          Round <small>R2以降は前ラウンド敗者が先攻</small>
+          Round <small>R2以降は前ラウンド敗者が先攻です</small>
         </h2>
+        {!firstOrder && (
+          <div className="order-question">
+            <b>最初に確認：この試合は先攻でしたか？</b>
+            <div className="split">
+              <button className="primary" onClick={() => setFirstOrder("先攻")}>先攻だった</button>
+              <button onClick={() => setFirstOrder("後攻")}>後攻だった</button>
+            </div>
+          </div>
+        )}
+        {firstOrder && r.length === 0 && (
+          <div className="round-start"><b>R1 · 自分は{firstOrder}</b><small>結果を入力してください</small></div>
+        )}
         {r.map((x, i) => (
           <div className="round" key={x.id}>
             <b>R{i + 1}</b>
@@ -275,6 +285,7 @@ function Recorder({
             <em>
               {x.order} {x.orderSource === "auto" && "（自動）"}
             </em>
+            <button className="undo" type="button" onClick={() => removeRound(x.id)}>このRoundを取り消す</button>
             <CardChoice
               label="自分TACTICS"
               cards={v?.tactics || []}
@@ -293,23 +304,25 @@ function Recorder({
                 )
               }
             />
-            <input
+            <select
               className="turn"
-              type="number"
-              min="1"
-              placeholder="キルT"
+              aria-label={`R${i + 1} キルターン`}
               value={x.killTurn || ""}
               onChange={(e) =>
                 setR(
                   r.map((y) =>
-                    y.id === x.id ? { ...y, killTurn: +e.target.value } : y,
+                    y.id === x.id ? { ...y, killTurn: (e.target.value || undefined) as Round["killTurn"] } : y,
                   ),
                 )
               }
-            />
+            >
+              <option value="">キルターン（任意）</option>
+              {[1, 2, 3, 4, 5, 6].map((turn) => <option key={turn} value={turn}>{turn}ターン</option>)}
+              <option value="Over">Over</option>
+            </select>
           </div>
         ))}
-        {r.length < 3 && (
+        {firstOrder && r.length < 3 && (
           <div className="split">
             <button className="win" onClick={() => addRound("WIN")}>
               ＋ WIN
@@ -502,9 +515,8 @@ function Analysis({ data }: { data: AppData }) {
     wins = ms.filter((m) => m.result === "WIN").length,
     rs = ms.flatMap((m) => m.rounds),
     rw = rs.filter((r) => r.result === "WIN").length,
-    avg =
-      rs.filter((r) => r.killTurn).reduce((a, r) => a + (r.killTurn || 0), 0) /
-      (rs.filter((r) => r.killTurn).length || 1);
+    numericKillTurns = rs.map((r) => r.killTurn).filter((turn): turn is Exclude<NonNullable<Round["killTurn"]>, "Over"> => typeof turn === "number"),
+    avg = numericKillTurns.reduce((a, turn) => a + turn, 0) / (numericKillTurns.length || 1);
   const group = (values: { key: string; win: boolean }[]) =>
     Object.entries(
       values.reduce<Record<string, [number, number]>>((a, x) => {
@@ -531,7 +543,7 @@ function Analysis({ data }: { data: AppData }) {
         <Metric label="Round 勝率" value={rate(rw, rs.length)} />
         <Metric
           label="平均キルT"
-          value={rs.some((r) => r.killTurn) ? avg.toFixed(1) : "—"}
+          value={numericKillTurns.length ? avg.toFixed(1) : "—"}
         />
       </div>
       <Report
@@ -621,6 +633,33 @@ function CardChoice({
       </div>
     </div>
   );
+}
+function LeaderChoice({
+  cards,
+  selected,
+  onChange,
+}: {
+  cards: Card[];
+  selected: Card[];
+  onChange: (cards: Card[]) => void;
+}) {
+  if (!cards.length)
+    return <div className="empty compact">画像付きの公式デッキを登録すると、ここから相手リーダーを選べます。</div>;
+  const toggle = (card: Card) => {
+    const exists = selected.some((selectedCard) => selectedCard.id === card.id);
+    if (exists) onChange(selected.filter((selectedCard) => selectedCard.id !== card.id));
+    else if (selected.length < 4) onChange([...selected, card]);
+  };
+  return <div className="leader-choice">
+    <div className="leader-picked">{selected.length ? selected.map((card) => <span key={card.id}>{card.name}</span>) : "未選択"}</div>
+    <div className="leader-grid">{cards.map((card) => {
+      const position = selected.findIndex((selectedCard) => selectedCard.id === card.id);
+      return <button type="button" key={card.id} className={position >= 0 ? "chosen" : ""} onClick={() => toggle(card)}>
+        {card.imageUrl ? <img src={card.imageUrl} alt={card.name} /> : <span className="card-fallback">◆</span>}
+        <b>{card.name}</b>{position >= 0 && <em>{position + 1}</em>}
+      </button>;
+    })}</div>
+  </div>;
 }
 function Report({ title, rows }: { title: string; rows: string[][] }) {
   return (

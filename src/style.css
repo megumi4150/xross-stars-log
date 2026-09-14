@@ -161,6 +161,10 @@ button.primary {
   color: #8ca5bd;
   font-size: 0.76rem;
 }
+.order-question, .round-start { border: 1px solid #1f607a; background: #0b2538; border-radius: 10px; padding: 12px; margin: 8px 0; }
+.order-question b, .round-start b { display: block; color: #ddecfa; }
+.round-start { display: flex; justify-content: space-between; align-items: center; }
+.undo { grid-column: 1 / 4; justify-self: end; min-height: 30px; padding: 4px 8px; font-size: .72rem; color: #ffb1c5; border-color: #754257; background: transparent; }
 .round input {
   margin: 0;
   grid-column: 2/4;
@@ -171,6 +175,16 @@ button.primary {
   grid-column: 2/4;
   width: 100px;
 }
+.leader-picked { display: flex; flex-wrap: wrap; gap: 5px; min-height: 28px; margin: 8px 0; }
+.leader-picked span { font-size: .72rem; color: #86e9ff; background: #12344b; border-radius: 999px; padding: 5px 8px; }
+.leader-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; max-height: 330px; overflow-y: auto; padding: 3px; }
+.leader-grid button { position: relative; min-height: 108px; padding: 3px; display: grid; grid-template-rows: 78px auto; gap: 3px; background: #091827; }
+.leader-grid button.chosen { border-color: #21ddff; box-shadow: 0 0 12px #21ddff88; }
+.leader-grid img, .card-fallback { width: 100%; height: 78px; object-fit: cover; border-radius: 5px; }
+.card-fallback { display: grid; place-items: center; color: #5ddfff; font-size: 1.5rem; background: #143149; }
+.leader-grid b { font-size: .62rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.leader-grid em { position: absolute; top: 5px; right: 5px; background: #00b7dc; color: #fff; font-style: normal; font-weight: bold; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; }
+.compact { padding: 14px; margin: 4px 0; font-size: .78rem; }
 .split,
 .actions {
   display: flex;
