@@ -313,24 +313,24 @@ function Recorder({
               {x.order} {x.orderSource === "auto" && "（自動）"}
             </em>
             <button className="undo" type="button" onClick={() => removeRound(x.id)}>このRoundを取り消す</button>
-            <TacticButton label="自分の使用TACTICS" selected={x.myTactic} onClick={() => openRoundPicker(x.id, "my")} />
-            <TacticButton label="相手の使用TACTICS" selected={x.opponentTactic} onClick={() => openRoundPicker(x.id, "opponent")} />
-            <select
-              className="turn"
-              aria-label={`R${i + 1} キルターン`}
-              value={x.killTurn || ""}
-              onChange={(e) =>
-                setR(
-                  r.map((y) =>
-                    y.id === x.id ? { ...y, killTurn: (e.target.value || undefined) as Round["killTurn"] } : y,
-                  ),
-                )
-              }
-            >
-              <option value="">キルターン（任意）</option>
-              {[1, 2, 3, 4, 5, 6].map((turn) => <option key={turn} value={turn}>{turn}ターン</option>)}
-              <option value="Over">Over</option>
-            </select>
+            <TacticButton label="自分の選択したTACTICS" selected={x.myTactic} onClick={() => openRoundPicker(x.id, "my")} />
+            <TacticButton label="相手の選択したTACTICS" selected={x.opponentTactic} onClick={() => openRoundPicker(x.id, "opponent")} />
+            <div className="kill-turn" aria-label={`R${i + 1} キルターン`}>
+              <small>キルターン</small>
+              <div>
+                {[1, 2, 3, 4, 5, 6].map((turn) => (
+                  <button
+                    type="button"
+                    key={turn}
+                    className={x.killTurn === turn ? "selected" : ""}
+                    aria-pressed={x.killTurn === turn}
+                    onClick={() => setR(r.map((y) => y.id === x.id ? { ...y, killTurn: y.killTurn === turn ? undefined : turn as Round["killTurn"] } : y))}
+                  >
+                    {turn}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         ))}
         {firstOrder && r.length < 3 && (
@@ -345,8 +345,8 @@ function Recorder({
         )}
       </div>
       {roundPicker && <TacticsPickerModal
-        title={roundPicker.side === "my" ? "自分の使用タクティクス" : "相手の使用タクティクス"}
-        sourceLabel={roundPicker.side === "my" ? "使用デッキ内のTACTICS" : "全TACTICS（カード名は重複なし）"}
+        title={roundPicker.side === "my" ? "自分の選択したタクティクス" : "相手の選択したタクティクス"}
+        sourceLabel={roundPicker.side === "my" ? "自分のデッキ内から選択" : "全TACTICSから選択（カード名は重複なし）"}
         cards={roundPicker.side === "my" ? uniqueCards(v?.tactics || []) : master.tactics}
         selected={r.find((round) => round.id === roundPicker.roundId)?.[roundPicker.side === "my" ? "myTactic" : "opponentTactic"]}
         loading={roundPicker.side === "opponent" && masterLoading}
@@ -625,7 +625,7 @@ function TacticsPickerModal({
     <div className="picker-modal tactics-modal">
       <div className="picker-head"><div><h2>{title}</h2><small>{sourceLabel}</small></div><button type="button" className="close" onClick={onClose} aria-label="閉じる">×</button></div>
       {loading ? <p className="picker-status">公式カード一覧を読み込み中…</p> : error ? <p className="picker-status error">{error}</p> : <div className="picker-grid tactics-grid">{cards.map((card) => <button type="button" key={card.id} className={selected === card.name ? "chosen" : ""} onClick={() => { onChange(card.name); onClose(); }}>{card.imageUrl ? <img src={card.imageUrl} alt={card.name} /> : <span className="card-fallback">◆</span>}<b>{card.name}</b>{selected === card.name && <em>✓</em>}</button>)}</div>}
-      <div className="picker-tabs"><button type="button" className={side === "my" ? "active" : ""} onClick={() => onSideChange("my")}>自分のタクティクス</button><button type="button" className={side === "opponent" ? "active" : ""} onClick={() => onSideChange("opponent")}>相手のタクティクス</button></div>
+      <div className="picker-tabs"><button type="button" className={side === "my" ? "active" : ""} onClick={() => onSideChange("my")}>自分の選択</button><button type="button" className={side === "opponent" ? "active" : ""} onClick={() => onSideChange("opponent")}>相手の選択</button></div>
       <button type="button" className="picker-confirm" onClick={onClose}>決定</button>
     </div>
   </div>;
