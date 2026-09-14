@@ -480,10 +480,9 @@ function Decks({
   if (open) {
     const version = selected ? latest(selected.id) : undefined;
     const matches = matchesFor(version?.id), wins = matches.filter((match) => match.result === "WIN").length;
-    const previewCards = [...(version?.leaders || []), ...(version?.mainDeck || []), ...(version?.tactics || [])].slice(0, 15);
     return <section className="deck-screen deck-detail">
       <div className="deck-detail-head"><button type="button" onClick={() => setOpen(false)}>← 戻る</button><h1>{selected?.name || "デッキを追加"}</h1><button type="button" className="primary" onClick={add}>保存する</button></div>
-      <div className="deck-visual">{coverImage ? <img src={coverImage} alt="デッキ画像" /> : <div className="deck-card-preview">{previewCards.length ? previewCards.map((card) => <span key={`${card.id}-${card.name}`}>{card.imageUrl ? <img src={card.imageUrl} alt={card.name} /> : <b>{card.name.slice(0, 4)}</b>}</span>) : <b>デッキ画像</b>}</div>}</div>
+      <div className="deck-visual">{coverImage ? <img src={coverImage} alt="デッキ画像" /> : <div className="deck-visual-empty">デッキ画像を追加すると、ここに表示されます</div>}</div>
       <label className="deck-image-upload">デッキ画像（任意）<span>画像を追加・変更<input type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0])} /></span></label>
       <div className="deck-form">
         <label>デッキ名<input value={name} placeholder="例：青緑インペ" onChange={(e) => setName(e.target.value)} /></label>

@@ -479,7 +479,8 @@ button.primary, .picker-confirm, .recorder .actions button, .recorder .actions .
 .recorder .card, .recorder .round, .recorder .tactic-button, .recorder .order-question, .recorder .round-start { color: var(--color-bone-text); background: var(--color-slate-canvas); border-color: var(--color-steel-border); border-radius: var(--radius); box-shadow: none; }
 .recorder input, .recorder select, .recorder textarea, .recorder .switch { color: var(--color-bone-text); background: var(--color-ink-well); border-color: var(--color-graphite-hairline); border-radius: var(--radius); }
 .recorder .card-buttons button { color: var(--color-ink-well); background: var(--color-signal-lime); border: 0; border-radius: var(--radius); box-shadow: none; }
-.recorder .card-buttons b, .recorder .round b, .recorder .round em, .recorder .tactic-button b { color: var(--color-bone-text); }
+.recorder .card-buttons button, .recorder .card-buttons button b, .recorder .card-buttons button small { color: var(--color-ink-well) !important; }
+.recorder .round b, .recorder .round em, .recorder .tactic-button b { color: var(--color-bone-text); }
 .recorder .actions { background: color-mix(in srgb, var(--color-slate-canvas) 94%, transparent); }
 .win { color: var(--color-signal-lime) !important; border-color: var(--color-signal-lime) !important; }
 .lose, .danger { color: var(--color-mute-red) !important; border-color: var(--color-mute-red) !important; }
@@ -509,7 +510,7 @@ button.primary, .picker-confirm, .recorder .actions button, .recorder .actions .
 .deck-row { color: var(--color-bone-text); background: var(--color-slate-canvas); border-color: var(--color-steel-border); border-radius: var(--radius); }
 .deck-row:hover { background: var(--color-ink-well); border-color: var(--color-graphite-hairline); }.deck-row b, .deck-detail-head h1, .deck-empty b, .deck-performance b { color: var(--color-bone-text); }.deck-row strong { color: var(--color-signal-lime); }.deck-row small, .deck-row i { color: var(--color-fog-text); }
 .deck-thumb { color: var(--color-fog-text); background: var(--color-ink-well); border-color: var(--color-steel-border); border-radius: var(--radius); }.deck-rate { background: var(--color-steel-border); }.deck-rate span { background: var(--color-signal-lime); }
-.deck-visual { background: var(--color-ink-well); border: 1px solid var(--color-steel-border); border-radius: var(--radius); }.deck-card-preview > span { color: var(--color-ash-text); background: var(--color-slate-canvas); border-color: var(--color-graphite-hairline); border-radius: var(--radius); }
+.deck-visual { background: var(--color-ink-well); border: 1px solid var(--color-steel-border); border-radius: var(--radius); }.deck-visual-empty { color: var(--color-fog-text); font-size: .82rem; }.deck-card-preview > span { color: var(--color-ash-text); background: var(--color-slate-canvas); border-color: var(--color-graphite-hairline); border-radius: var(--radius); }
 .deck-image-upload span { color: var(--color-cloud-text); background: var(--color-ink-well); border-color: var(--color-graphite-hairline); border-radius: var(--radius); }.deck-performance { background: var(--color-ink-well); border: 1px solid var(--color-steel-border); border-radius: var(--radius); }
 
 /* Analysis and settings */
