@@ -1,0 +1,5 @@
+import { AppData, emptyData } from './types';
+const DB='xross-log', STORE='state', KEY='app-data';
+export async function load():Promise<AppData>{return new Promise((resolve,reject)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore(STORE);r.onerror=()=>reject(r.error);r.onsuccess=()=>{const t=r.result.transaction(STORE,'readonly').objectStore(STORE).get(KEY);t.onsuccess=()=>resolve(t.result||emptyData());t.onerror=()=>reject(t.error)}})}
+export async function save(data:AppData){return new Promise<void>((resolve,reject)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore(STORE);r.onsuccess=()=>{const t=r.result.transaction(STORE,'readwrite');t.objectStore(STORE).put(data,KEY);t.oncomplete=()=>resolve();t.onerror=()=>reject(t.error)};r.onerror=()=>reject(r.error)})}
+export async function wipe(){return new Promise<void>((resolve,reject)=>{const r=indexedDB.deleteDatabase(DB);r.onsuccess=()=>resolve();r.onerror=()=>reject(r.error)})}

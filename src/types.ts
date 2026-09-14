@@ -1,0 +1,11 @@
+export type Card = { id:string; name:string; cardType:'leader'|'main'|'tactics'|'ace'; imageUrl?:string; isAce?:boolean };
+export type CardCount = Card & { count:number };
+export type AceCount = { cardId:string; name:string; count:number|'?' };
+export type Deck = {id:string;name:string;archived:boolean;createdAt:string;updatedAt:string};
+export type DeckVersion = {id:string;deckId:string;versionNumber:number;label:string;officialDeckCode?:string;contentHash:string;leaders:Card[];mainDeck:CardCount[];tactics:Card[];aceSummary:AceCount[];createdAt:string;changeSummary:string[]};
+export type Opponent = {id:string;leaderIds:string[];leaders:string[];aces:AceCount[];displayLabel:string;lastUsedAt:string};
+export type Round = {id:string;roundNumber:1|2|3;result:'WIN'|'LOSE';order:'先攻'|'後攻';orderSource:'manual'|'auto';myTactic?:string;opponentTactic?:string;killTurn?:number;aceInvolvements:AceCount[];note?:string};
+export type Match = {id:string;playedAt:string;matchType:'フリー'|'大会';tournamentName?:string;deckVersionId:string;opponentId?:string;result:'WIN'|'LOSE';rounds:Round[];note?:string;createdAt:string};
+export type AppData = {decks:Deck[];versions:DeckVersion[];opponents:Opponent[];matches:Match[]};
+export const uid=()=>crypto.randomUUID();
+export const emptyData=():AppData=>({decks:[],versions:[],opponents:[],matches:[]});
