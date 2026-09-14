@@ -1,6 +1,6 @@
 import { Card } from "./types";
 
-export type CardMasterKind = "leader" | "ace";
+export type CardMasterKind = "leader" | "ace" | "tactics";
 
 /** Browser adapter: card data is always obtained from our same-origin Function. */
 export class OfficialXrossStarsCardMasterAdapter {

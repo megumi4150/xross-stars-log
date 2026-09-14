@@ -2,15 +2,15 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const UPSTREAM = 'https://api.xross-stars.com/v1/cards';
 const TIMEOUT_MS = 7_000, MAX_BYTES = 3_000_000, CACHE_MS = 3_600_000, RATE_WINDOW_MS = 60_000, RATE_MAX = 20;
-type Kind = 'leader' | 'ace';
+type Kind = 'leader' | 'ace' | 'tactics';
 type OfficialCard = {
   id:number; name:string; display_card_number:string; image_url?:string; is_ace?:boolean;
   card_type?:{internal_id:string}; card_rarity?:{internal_id:string}; card_color?:{internal_id:string};
 };
 type OfficialResponse = {cards:OfficialCard[];page_info:{current_page:number;has_next_page:boolean}};
-type Card = {id:string;name:string;cardType:'leader'|'ace';imageUrl?:string;isAce:boolean;rarity?:string;color?:string};
+type Card = {id:string;name:string;cardType:'leader'|'ace'|'tactics';imageUrl?:string;isAce:boolean;rarity?:string;color?:string};
 const cache = new Map<Kind,{expires:number;cards:Card[]}>(), visitors = new Map<string,{started:number;count:number}>();
-const kindIsValid = (value:string): value is Kind => value === 'leader' || value === 'ace';
+const kindIsValid = (value:string): value is Kind => value === 'leader' || value === 'ace' || value === 'tactics';
 function normalize(card:OfficialCard, kind:Kind):Card { return {id:card.display_card_number?.split(' ')[0] || String(card.id),name:card.name,cardType:kind,imageUrl:card.image_url,isAce:Boolean(card.is_ace),rarity:card.card_rarity?.internal_id,color:card.card_color?.internal_id}; }
 async function fetchPage(page:number):Promise<OfficialResponse> {
   const controller = new AbortController(), timer = setTimeout(()=>controller.abort(), TIMEOUT_MS);
@@ -29,10 +29,14 @@ async function fetchPage(page:number):Promise<OfficialResponse> {
 async function fetchMaster(kind:Kind):Promise<Card[]> {
   const all:OfficialCard[] = []; let page = 1;
   for (;;) { const data = await fetchPage(page); all.push(...data.cards); if (!data.page_info.has_next_page) break; page = data.page_info.current_page + 1; if (page > 20) throw new Error('INVALID_SCHEMA'); }
-  return all.filter(card => kind === 'leader'
+  const selected = all.filter(card => kind === 'leader'
     ? card.card_type?.internal_id === 'leader' && card.card_rarity?.internal_id === 'LRP'
-    : Boolean(card.is_ace) && card.card_rarity?.internal_id === 'SR')
-    .map(card => normalize(card,kind));
+    : kind === 'ace'
+      ? Boolean(card.is_ace) && card.card_rarity?.internal_id === 'SR'
+      : card.card_type?.internal_id === 'tactics');
+  // The official master can contain reprints/parallel editions of a named TACTICS.
+  // The log chooses a tactic by name, so expose one representative image per name.
+  return [...new Map(selected.map(card => [card.name, card])).values()].map(card => normalize(card,kind));
 }
 /** Fixed card-master endpoint. It is not a generic proxy. */
 export default async function handler(req:VercelRequest,res:VercelResponse) {

@@ -105,7 +105,8 @@ function Recorder({
     [firstOrder, setFirstOrder] = useState<"先攻" | "後攻" | "">(""),
     [note, setNote] = useState(""),
     [picker, setPicker] = useState<CardMasterKind | "">(""),
-    [master, setMaster] = useState<Record<CardMasterKind, Card[]>>({ leader: [], ace: [] }),
+    [roundPicker, setRoundPicker] = useState<{roundId:string;side:"my"|"opponent"} | null>(null),
+    [master, setMaster] = useState<Record<CardMasterKind, Card[]>>({ leader: [], ace: [], tactics: [] }),
     [masterLoading, setMasterLoading] = useState(false),
     [masterError, setMasterError] = useState("");
   const addRound = (result: "WIN" | "LOSE") => {
@@ -183,6 +184,18 @@ function Recorder({
       setMaster((current) => ({ ...current, [kind]: cards }));
     }
     catch (error) { setMasterError(error instanceof Error ? error.message : "カード一覧を取得できませんでした"); }
+    finally { setMasterLoading(false); }
+  };
+  const uniqueCards = (cards:Card[]) => [...new Map(cards.map((card) => [card.name, card])).values()];
+  const openRoundPicker = async (roundId:string, side:"my"|"opponent") => {
+    setRoundPicker({roundId, side}); setMasterError("");
+    if (side === "my") return;
+    if (master.tactics.length) return;
+    setMasterLoading(true);
+    try {
+      const cards = await new OfficialXrossStarsCardMasterAdapter().list("tactics");
+      setMaster((current) => ({ ...current, tactics: cards }));
+    } catch (error) { setMasterError(error instanceof Error ? error.message : "カード一覧を取得できませんでした"); }
     finally { setMasterLoading(false); }
   };
   return (
@@ -300,24 +313,8 @@ function Recorder({
               {x.order} {x.orderSource === "auto" && "（自動）"}
             </em>
             <button className="undo" type="button" onClick={() => removeRound(x.id)}>このRoundを取り消す</button>
-            <CardChoice
-              label="自分TACTICS"
-              cards={v?.tactics || []}
-              selected={x.myTactic}
-              onChange={(myTactic) =>
-                setR(r.map((y) => (y.id === x.id ? { ...y, myTactic } : y)))
-              }
-            />
-            <CardChoice
-              label="相手TACTICS"
-              cards={v?.tactics || []}
-              selected={x.opponentTactic}
-              onChange={(opponentTactic) =>
-                setR(
-                  r.map((y) => (y.id === x.id ? { ...y, opponentTactic } : y)),
-                )
-              }
-            />
+            <TacticButton label="自分の使用TACTICS" selected={x.myTactic} onClick={() => openRoundPicker(x.id, "my")} />
+            <TacticButton label="相手の使用TACTICS" selected={x.opponentTactic} onClick={() => openRoundPicker(x.id, "opponent")} />
             <select
               className="turn"
               aria-label={`R${i + 1} キルターン`}
@@ -347,6 +344,18 @@ function Recorder({
           </div>
         )}
       </div>
+      {roundPicker && <TacticsPickerModal
+        title={roundPicker.side === "my" ? "自分の使用タクティクス" : "相手の使用タクティクス"}
+        sourceLabel={roundPicker.side === "my" ? "使用デッキ内のTACTICS" : "全TACTICS（カード名は重複なし）"}
+        cards={roundPicker.side === "my" ? uniqueCards(v?.tactics || []) : master.tactics}
+        selected={r.find((round) => round.id === roundPicker.roundId)?.[roundPicker.side === "my" ? "myTactic" : "opponentTactic"]}
+        loading={roundPicker.side === "opponent" && masterLoading}
+        error={masterError}
+        side={roundPicker.side}
+        onClose={() => setRoundPicker(null)}
+        onSideChange={(side) => openRoundPicker(roundPicker.roundId, side)}
+        onChange={(value) => setR(r.map((round) => round.id === roundPicker.roundId ? (roundPicker.side === "my" ? {...round,myTactic:value} : {...round,opponentTactic:value}) : round))}
+      />}
       <textarea
         placeholder="試合メモ（任意）"
         value={note}
@@ -606,47 +615,21 @@ function Metric({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-function CardChoice({
-  label,
-  cards,
-  selected,
-  onChange,
-}: {
-  label: string;
-  cards: Card[];
-  selected?: string;
-  onChange: (name: string) => void;
-}) {
-  if (!cards.length)
-    return (
-      <input
-        placeholder={`${label}（デッキ登録後に画像選択できます）`}
-        value={selected || ""}
-        onChange={(e) => onChange(e.target.value)}
-      />
-    );
-  return (
-    <div className="card-choice">
-      <small>{label}</small>
-      <div>
-        {cards.map((card) => (
-          <button
-            type="button"
-            className={selected === card.name ? "chosen" : ""}
-            key={card.id}
-            onClick={() => onChange(card.name)}
-          >
-            {card.imageUrl ? (
-              <img src={card.imageUrl} alt={card.name} />
-            ) : (
-              <span>◆</span>
-            )}
-            <b>{card.name}</b>
-          </button>
-        ))}
-      </div>
+function TacticButton({ label, selected, onClick }: {label:string;selected?:string;onClick:()=>void}) {
+  return <button type="button" className="tactic-button" onClick={onClick}><small>{label}</small><b>{selected || "選択する"}</b></button>;
+}
+function TacticsPickerModal({
+  title, sourceLabel, cards, selected, loading, error, side, onClose, onSideChange, onChange,
+}: {title:string;sourceLabel:string;cards:Card[];selected?:string;loading:boolean;error:string;side:"my"|"opponent";onClose:()=>void;onSideChange:(side:"my"|"opponent")=>void;onChange:(value?:string)=>void}) {
+  return <div className="picker-backdrop" role="dialog" aria-modal="true" aria-label={title}>
+    <div className="picker-modal tactics-modal">
+      <div className="picker-head"><div><h2>{title}</h2><small>{sourceLabel}</small></div><button type="button" className="close" onClick={onClose} aria-label="閉じる">×</button></div>
+      <div className="tactic-selected">{selected ? <button type="button" onClick={() => onChange(undefined)} aria-label={`${selected} を選択解除`}><b>{selected}</b><span>タップして解除</span></button> : <span>TACTICSを1枚選択してください</span>}</div>
+      {loading ? <p className="picker-status">公式カード一覧を読み込み中…</p> : error ? <p className="picker-status error">{error}</p> : <div className="picker-grid tactics-grid">{cards.map((card) => <button type="button" key={card.id} className={selected === card.name ? "chosen" : ""} onClick={() => onChange(selected === card.name ? undefined : card.name)}>{card.imageUrl ? <img src={card.imageUrl} alt={card.name} /> : <span className="card-fallback">◆</span>}<b>{card.name}</b>{selected === card.name && <em>✓</em>}</button>)}</div>}
+      <div className="picker-tabs"><button type="button" className={side === "my" ? "active" : ""} onClick={() => onSideChange("my")}>自分のタクティクス</button><button type="button" className={side === "opponent" ? "active" : ""} onClick={() => onSideChange("opponent")}>相手のタクティクス</button></div>
+      <button type="button" className="picker-confirm" onClick={onClose}>決定</button>
     </div>
-  );
+  </div>;
 }
 function SelectedCards({ label, cards }: { label:string; cards:Card[] }) {
   if (!cards.length) return null;

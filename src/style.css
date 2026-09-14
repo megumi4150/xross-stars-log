@@ -175,6 +175,9 @@ button.primary {
   grid-column: 2/4;
   width: 100px;
 }
+.tactic-button { grid-column: 2 / 4; min-height: 52px; text-align: left; padding: 8px 11px; background: #0b2034; border-color: #28607c; }
+.tactic-button small, .tactic-button b { display: block; }
+.tactic-button b { color: #71e2ff; margin-top: 2px; font-size: .88rem; }
 .card-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
 .card-buttons button { font-size: .78rem; text-align: left; }
 .card-buttons b { display: block; color: #5de0ff; font-size: 1.15rem; margin-top: 4px; }
@@ -210,6 +213,11 @@ button.primary {
 .picker-tabs button { border: 0; border-radius: 0; min-height: 58px; background: transparent; color: #8ca5bd; font-size: 1.15rem; }
 .picker-tabs button.active { color: #5de0ff; box-shadow: inset 0 -4px #25d8ff; }
 .picker-confirm { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); width: min(264px, calc(100% - 80px)); min-height: 62px; border: 0; border-radius: 32px; color: #fff; background: linear-gradient(135deg, #00b7dc, #3277ff); font-size: 1.25rem; font-weight: 800; box-shadow: 0 5px 8px #0b95c966; }
+.tactics-modal .picker-head small { color: #8ca5bd; display: block; margin-top: 4px; }
+.tactic-selected { min-height: 76px; margin: 12px 0; padding: 9px; border: 1px solid #315875; border-radius: 10px; background: #0d1c2d; display: grid; place-items: center; color: #8ca5bd; }
+.tactic-selected button { width: 100%; min-height: 54px; padding: 6px 10px; text-align: left; border-color: #25d8ff; background: #102942; }
+.tactic-selected b, .tactic-selected span { display: block; }.tactic-selected b { color: #5de0ff; }.tactic-selected span { font-size: .72rem; color: #8ca5bd; margin-top: 3px; }
+.tactics-grid { height: calc(100dvh - 332px); }
 .compact { padding: 14px; margin: 4px 0; font-size: .78rem; }
 .split,
 .actions {
