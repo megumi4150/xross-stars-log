@@ -1,7 +1,7 @@
 export type Card = { id:string; name:string; cardType:'leader'|'main'|'tactics'|'ace'; imageUrl?:string; isAce?:boolean; rarity?:string; color?:string };
 export type CardCount = Card & { count:number };
 export type AceCount = { cardId:string; name:string; count:number|'?' };
-export type Deck = {id:string;name:string;archived:boolean;createdAt:string;updatedAt:string};
+export type Deck = {id:string;name:string;archived:boolean;createdAt:string;updatedAt:string;coverImage?:string};
 export type DeckVersion = {id:string;deckId:string;versionNumber:number;label:string;officialDeckCode?:string;contentHash:string;leaders:Card[];mainDeck:CardCount[];tactics:Card[];aceSummary:AceCount[];createdAt:string;changeSummary:string[]};
 export type Opponent = {id:string;leaderIds:string[];leaders:string[];leaderCards?:Card[];aces:AceCount[];displayLabel:string;lastUsedAt:string};
 export type KillTurn = 1|2|3|4|5|6|'Over';

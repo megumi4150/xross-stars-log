@@ -236,7 +236,7 @@ function Recorder({
             <option value="">選択してください</option>
             {data.versions.map((v) => (
               <option key={v.id} value={v.id}>
-                {data.decks.find((d) => d.id === v.deckId)?.name} · {v.label}
+                {data.decks.find((d) => d.id === v.deckId)?.name}
               </option>
             ))}
           </select>
@@ -378,11 +378,18 @@ function Decks({
   update: (x: AppData, m?: string) => void;
 }) {
   const [open, setOpen] = useState(false),
+    [detailId, setDetailId] = useState<string | null>(null),
+    [query, setQuery] = useState(""),
+    [sort, setSort] = useState<"recent" | "name" | "rate">("recent"),
     [source, setSource] = useState(""),
     [name, setName] = useState(""),
     [leaders, setLeaders] = useState(""),
     [main, setMain] = useState(""),
-    [tactics, setTactics] = useState("");
+    [tactics, setTactics] = useState(""),
+    [coverImage, setCoverImage] = useState<string | undefined>();
+  const latest = (deckId: string) => data.versions.filter((v) => v.deckId === deckId).at(-1);
+  const selected = data.decks.find((deck) => deck.id === detailId);
+  const matchesFor = (versionId?: string) => data.matches.filter((match) => match.deckVersionId === versionId);
   const cards = (s: string, type: Card["cardType"]): Card[] =>
     s
       .split(/[\n,]/)
@@ -408,129 +415,89 @@ function Decks({
         alert("Leader 4枚を入力するか、公式デッキURLを読み込んでください");
         return;
       }
-      const hash = hashDeck(ls, md, ts),
-        deck =
-          data.decks.find((d) => d.name === deckName) ||
-          ({
-            id: uid(),
-            name: deckName,
-            archived: false,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          } as Deck);
-      const old = data.versions.filter((v) => v.deckId === deck.id).at(-1);
-      if (old?.contentHash === hash) {
-        update(data, "同一構築のためバージョンは増やしません");
-        setOpen(false);
-        return;
-      }
+      const now = new Date().toISOString();
+      const deck: Deck = selected
+        ? { ...selected, name: deckName, coverImage, updatedAt: now }
+        : { id: uid(), name: deckName, archived: false, createdAt: now, updatedAt: now, coverImage };
+      const old = latest(deck.id);
       const version: DeckVersion = {
-        id: uid(),
+        id: old?.id || uid(),
         deckId: deck.id,
-        versionNumber: (old?.versionNumber || 0) + 1,
-        label: `v${(old?.versionNumber || 0) + 1}`,
+        versionNumber: 1,
+        label: "",
         officialDeckCode: code?.code,
-        contentHash: hash,
+        contentHash: hashDeck(ls, md, ts),
         leaders: ls,
         mainDeck: md,
         tactics: ts,
         aceSummary: md
           .filter((x) => "isAce" in x && x.isAce)
           .map((x) => ({ cardId: x.id, name: x.name, count: x.count })),
-        createdAt: new Date().toISOString(),
-        changeSummary: old
-          ? [
-              ...md
-                .filter((x) => !old.mainDeck.some((y) => y.id === x.id))
-                .map((x) => `IN: ${x.name}`),
-              ...old.mainDeck
-                .filter((x) => !md.some((y) => y.id === x.id))
-                .map((x) => `OUT: ${x.name}`),
-            ]
-          : ["初期構築"],
+        createdAt: old?.createdAt || now,
+        changeSummary: [],
       };
       update(
         {
           ...data,
-          decks: data.decks.some((d) => d.id === deck.id)
-            ? data.decks
-            : data.decks.concat(deck),
-          versions: [...data.versions, version],
+          decks: selected ? data.decks.map((item) => item.id === deck.id ? deck : item) : data.decks.concat(deck),
+          versions: old ? data.versions.map((item) => item.id === old.id ? version : item) : data.versions.concat(version),
         },
-        `${deckName} ${version.label} を登録しました`,
+        `${deckName} を保存しました`,
       );
+      setDetailId(null);
       setOpen(false);
     } catch (e) {
       alert(e instanceof Error ? e.message : "登録できませんでした");
     }
   };
-  return (
-    <section>
-      <div className="title">
-        <div>
-          <h1>デッキ</h1>
-          <p>構築をスナップショットとして保存</p>
-        </div>
-        <button className="primary" onClick={() => setOpen(!open)}>
-          ＋ 追加
-        </button>
+  const startNew = () => {
+    setDetailId(null); setSource(""); setName(""); setLeaders(""); setMain(""); setTactics(""); setCoverImage(undefined); setOpen(true);
+  };
+  const edit = (deck: Deck) => {
+    const version = latest(deck.id);
+    setDetailId(deck.id); setName(deck.name); setSource(version?.officialDeckCode || "");
+    setLeaders(version?.leaders.map((card) => card.name).join(", ") || "");
+    setMain(version?.mainDeck.map((card) => card.name).join("\n") || "");
+    setTactics(version?.tactics.map((card) => card.name).join(", ") || ""); setCoverImage(deck.coverImage); setOpen(true);
+  };
+  const setImage = (file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { alert("画像ファイルを選択してください"); return; }
+    const reader = new FileReader(); reader.onload = () => setCoverImage(String(reader.result)); reader.readAsDataURL(file);
+  };
+  const visibleDecks = data.decks.filter((deck) => deck.name.toLowerCase().includes(query.toLowerCase())).sort((a, b) => {
+    if (sort === "name") return a.name.localeCompare(b.name, "ja");
+    const av = latest(a.id), bv = latest(b.id);
+    if (sort === "rate") return (matchesFor(bv?.id).filter((m) => m.result === "WIN").length / Math.max(matchesFor(bv?.id).length, 1)) - (matchesFor(av?.id).filter((m) => m.result === "WIN").length / Math.max(matchesFor(av?.id).length, 1));
+    return b.updatedAt.localeCompare(a.updatedAt);
+  });
+  if (open) {
+    const version = selected ? latest(selected.id) : undefined;
+    const matches = matchesFor(version?.id), wins = matches.filter((match) => match.result === "WIN").length;
+    const previewCards = [...(version?.leaders || []), ...(version?.mainDeck || []), ...(version?.tactics || [])].slice(0, 15);
+    return <section className="deck-screen deck-detail">
+      <div className="deck-detail-head"><button type="button" onClick={() => setOpen(false)}>← 戻る</button><h1>{selected?.name || "デッキを追加"}</h1><button type="button" className="primary" onClick={add}>保存する</button></div>
+      <div className="deck-visual">{coverImage ? <img src={coverImage} alt="デッキ画像" /> : <div className="deck-card-preview">{previewCards.length ? previewCards.map((card) => <span key={`${card.id}-${card.name}`}>{card.imageUrl ? <img src={card.imageUrl} alt={card.name} /> : <b>{card.name.slice(0, 4)}</b>}</span>) : <b>デッキ画像</b>}</div>}</div>
+      <label className="deck-image-upload">デッキ画像（任意）<span>画像を追加・変更<input type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0])} /></span></label>
+      <div className="deck-form">
+        <label>デッキ名<input value={name} placeholder="例：青緑インペ" onChange={(e) => setName(e.target.value)} /></label>
+        <label>公式デッキURL / UUID<input value={source} placeholder="https://..." onChange={(e) => setSource(e.target.value)} /><small>入力して保存すると公式構築を読み込みます。</small></label>
+        <label>リーダー（4枚）<input value={leaders} placeholder="カード名をカンマ区切り" onChange={(e) => setLeaders(e.target.value)} /></label>
+        <label>メインデッキ<textarea value={main} placeholder="カード名を改行またはカンマ区切り" onChange={(e) => setMain(e.target.value)} /></label>
+        <label>TACTICS<input value={tactics} placeholder="カード名をカンマ区切り" onChange={(e) => setTactics(e.target.value)} /></label>
       </div>
-      {open && (
-        <div className="card">
-          <h2>デッキを追加</h2>
-          <input
-            placeholder="公式デッキURL / UUID（任意）"
-            value={source}
-            onChange={(e) => setSource(e.target.value)}
-          />
-          <small>
-            共有URLまたはUUIDを入力すると、同一Originの安全な取得Functionを通じて構築を読み込みます。
-          </small>
-          <input
-            placeholder="デッキ名"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <input
-            placeholder="Leader 4枚（カンマ区切り）"
-            value={leaders}
-            onChange={(e) => setLeaders(e.target.value)}
-          />
-          <textarea
-            placeholder="Main Deck（カード名をカンマ/改行区切り）"
-            value={main}
-            onChange={(e) => setMain(e.target.value)}
-          />
-          <input
-            placeholder="TACTICS（カンマ区切り）"
-            value={tactics}
-            onChange={(e) => setTactics(e.target.value)}
-          />
-          <button className="primary full" onClick={add}>
-            確認して登録
-          </button>
-        </div>
-      )}
-      {data.decks.length === 0 ? (
-        <div className="empty">まずはデッキを登録しましょう</div>
-      ) : (
-        data.decks.map((d) => (
-          <div className="card" key={d.id}>
-            <h2>{d.name}</h2>
-            {data.versions
-              .filter((v) => v.deckId === d.id)
-              .map((v) => (
-                <div className="version" key={v.id}>
-                  <b>{v.label}</b>
-                  <span>{v.leaders.map((x) => x.name).join(" / ")}</span>
-                  <small>{v.changeSummary.join(" · ")}</small>
-                </div>
-              ))}
-          </div>
-        ))
-      )}
-    </section>
-  );
+      {selected && <div className="deck-performance"><b>成績</b><span>対戦: {matches.length}戦　勝: {wins}　勝率: {rate(wins, matches.length)}</span></div>}
+    </section>;
+  }
+  return <section className="deck-screen">
+    <div className="deck-tabs"><button className="active">自分のデッキ</button><button disabled>相手デッキ</button></div>
+    <button className="deck-add" type="button" onClick={startNew}>＋ デッキを追加</button>
+    <div className="deck-list-tools"><span>{visibleDecks.length}件のデッキ</span><select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)}><option value="recent">最近使用順</option><option value="name">名前順</option><option value="rate">勝率順</option></select><input value={query} placeholder="🔍 デッキ名で検索..." onChange={(e) => setQuery(e.target.value)} /></div>
+    {visibleDecks.length === 0 ? <div className="deck-empty">🃏<b>まだデッキが登録されていません</b><small>「デッキを追加」から公式コードを読み込めます</small></div> : <div className="deck-list">{visibleDecks.map((deck) => {
+      const version = latest(deck.id), matches = matchesFor(version?.id), wins = matches.filter((match) => match.result === "WIN").length, thumb = deck.coverImage || version?.leaders[0]?.imageUrl;
+      return <button type="button" className="deck-row" key={deck.id} onClick={() => edit(deck)}><span className="deck-thumb">{thumb ? <img src={thumb} alt="" /> : "▦"}</span><b>{deck.name}</b><strong>{rate(wins, matches.length)}</strong><small>{matches.length}戦 {wins}勝 {matches.length - wins}敗</small><i>›</i><span className="deck-rate"><span style={{ width: `${matches.length ? (wins / matches.length) * 100 : 0}%` }} /></span></button>;
+    })}</div>}
+  </section>;
 }
 function Analysis({ data }: { data: AppData }) {
   const [filter, setFilter] = useState("");
@@ -556,7 +523,7 @@ function Analysis({ data }: { data: AppData }) {
         <option value="">すべてのデッキ</option>
         {data.versions.map((v) => (
           <option key={v.id} value={v.id}>
-            {data.decks.find((d) => d.id === v.deckId)?.name} {v.label}
+            {data.decks.find((d) => d.id === v.deckId)?.name}
           </option>
         ))}
       </select>
