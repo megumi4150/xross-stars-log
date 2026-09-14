@@ -273,7 +273,7 @@ function Recorder({
           </div>
         )}
       </div>
-      {picker && <CardPickerModal title={picker === "leader" ? "使用リーダー" : "使用ACE"} kind={picker} cards={master[picker]} selected={picker === "leader" ? leaders : aces} max={picker === "leader" ? 4 : 2} loading={masterLoading} error={masterError} onClose={() => setPicker("")} onChange={(cards) => picker === "leader" ? setLeaders(cards) : setAces(cards)} />}
+      {picker && <CardPickerModal title={picker === "leader" ? "使用リーダー" : "使用ACE"} kind={picker} cards={master[picker]} selected={picker === "leader" ? leaders : aces} max={picker === "leader" ? 4 : 2} loading={masterLoading} error={masterError} onClose={() => setPicker("")} onKindChange={openPicker} onChange={(cards) => picker === "leader" ? setLeaders(cards) : setAces(cards)} />}
       <div className="card">
         <h2>
           Round <small>R2以降は前ラウンド敗者が先攻です</small>
@@ -653,8 +653,8 @@ function SelectedCards({ label, cards }: { label:string; cards:Card[] }) {
   return <div className="selected-cards"><small>{label}</small><div>{cards.map((card) => <span key={card.id}>{card.imageUrl && <img src={card.imageUrl} alt="" />}<b>{card.name}</b></span>)}</div></div>;
 }
 function CardPickerModal({
-  title, kind, cards, selected, max, loading, error, onClose, onChange,
-}: { title:string; kind:CardMasterKind; cards:Card[]; selected:Card[]; max:number; loading:boolean; error:string; onClose:()=>void; onChange:(cards:Card[])=>void }) {
+  title, kind, cards, selected, max, loading, error, onClose, onKindChange, onChange,
+}: { title:string; kind:CardMasterKind; cards:Card[]; selected:Card[]; max:number; loading:boolean; error:string; onClose:()=>void; onKindChange:(kind:CardMasterKind)=>void; onChange:(cards:Card[])=>void }) {
   const [color, setColor] = useState("all");
   const colors = [["all", "すべて"], ["red", "赤"], ["blue", "青"], ["yellow", "黄"], ["green", "緑"], ["colorless", "無"]] as const;
   const visibleCards = color === "all" ? cards : cards.filter((card) => card.color === color);
@@ -665,8 +665,13 @@ function CardPickerModal({
   };
   return <div className="picker-backdrop" role="dialog" aria-modal="true" aria-label={title}>
     <div className="picker-modal">
-      <div className="picker-head"><div><h2>{title}</h2><small>{kind === "leader" ? "LRPのリーダーのみ" : "SRかつACEのカードのみ"} · {selected.length}/{max}</small></div><button type="button" className="close" onClick={onClose} aria-label="閉じる">×</button></div>
-      <SelectedCards label="選択中" cards={selected} />
+      <div className="picker-head"><h2>{title}</h2><button type="button" className="close" onClick={onClose} aria-label="閉じる">×</button></div>
+      <div className="picker-slots" aria-label="選択中のカード">{Array.from({length:max}, (_, index) => {
+        const card = selected[index];
+        return <button type="button" key={index} className={card ? "filled" : ""} disabled={!card} onClick={() => card && toggle(card)} aria-label={card ? `${card.name} を選択解除` : "未選択"}>
+          {card && <><img src={card.imageUrl} alt={card.name} /><span>✓</span></>}
+        </button>;
+      })}</div>
       <div className="color-filter">{colors.map(([id, label]) => <button key={id} type="button" className={color === id ? `selected ${id}` : id} onClick={() => setColor(id)}>{label}</button>)}</div>
       {loading ? <p className="picker-status">公式カード一覧を読み込み中…</p> : error ? <p className="picker-status error">{error}</p> : <div className="picker-grid">{visibleCards.map((card) => {
         const position = selected.findIndex((selectedCard) => selectedCard.id === card.id);
@@ -675,7 +680,8 @@ function CardPickerModal({
           <b>{card.name}</b>{position >= 0 && <em>{position + 1}</em>}
         </button>;
       })}</div>}
-      <button type="button" className="primary full" onClick={onClose}>決定</button>
+      <div className="picker-tabs"><button type="button" className={kind === "leader" ? "active" : ""} onClick={() => onKindChange("leader")}>リーダー</button><button type="button" className={kind === "ace" ? "active" : ""} onClick={() => onKindChange("ace")}>Ace</button></div>
+      <button type="button" className="picker-confirm" onClick={onClose}>決定</button>
     </div>
   </div>;
 }
