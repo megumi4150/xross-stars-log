@@ -19,6 +19,10 @@ type Tab = "record" | "decks" | "analysis" | "settings";
 const today = () => new Date().toISOString().slice(0, 10);
 const rate = (w: number, n: number) =>
   n ? `${Math.round((w / n) * 100)}%` : "—";
+const currentVersions = (data: AppData) =>
+  data.decks
+    .map((deck) => data.versions.filter((version) => version.deckId === deck.id).at(-1))
+    .filter((version): version is DeckVersion => Boolean(version));
 const sample: Card[] = [
   ["BP01-001", "うるか"],
   ["BP01-003", "橘ひなの"],
@@ -94,11 +98,12 @@ function Recorder({
   data: AppData;
   update: (x: AppData, m?: string) => void;
 }) {
+  const versions = currentVersions(data);
   const [carry, setCarry] = useState(true),
     [date, setDate] = useState(today()),
     [type, setType] = useState<"フリー" | "大会">("フリー"),
     [event, setEvent] = useState(""),
-    [version, setVersion] = useState(data.versions[0]?.id || ""),
+    [version, setVersion] = useState(versions[0]?.id || ""),
     [leaders, setLeaders] = useState<Card[]>([]),
     [aces, setAces] = useState<Card[]>([]),
     [r, setR] = useState<Round[]>([]),
@@ -234,7 +239,7 @@ function Recorder({
           使用デッキ
           <select value={version} onChange={(e) => setVersion(e.target.value)}>
             <option value="">選択してください</option>
-            {data.versions.map((v) => (
+            {versions.map((v) => (
               <option key={v.id} value={v.id}>
                 {data.decks.find((d) => d.id === v.deckId)?.name}
               </option>
@@ -501,6 +506,7 @@ function Decks({
 }
 function Analysis({ data }: { data: AppData }) {
   const [filter, setFilter] = useState("");
+  const versions = currentVersions(data);
   const ms = data.matches.filter((m) => !filter || m.deckVersionId === filter),
     wins = ms.filter((m) => m.result === "WIN").length,
     rs = ms.flatMap((m) => m.rounds),
@@ -521,7 +527,7 @@ function Analysis({ data }: { data: AppData }) {
       <h1>分析</h1>
       <select value={filter} onChange={(e) => setFilter(e.target.value)}>
         <option value="">すべてのデッキ</option>
-        {data.versions.map((v) => (
+        {versions.map((v) => (
           <option key={v.id} value={v.id}>
             {data.decks.find((d) => d.id === v.deckId)?.name}
           </option>
@@ -538,10 +544,10 @@ function Analysis({ data }: { data: AppData }) {
       </div>
       <Report
         title="構築別"
-        rows={data.versions.map((v) => {
+        rows={versions.map((v) => {
           const x = ms.filter((m) => m.deckVersionId === v.id);
           return [
-            v.label,
+            data.decks.find((deck) => deck.id === v.deckId)?.name || "名称未設定デッキ",
             `${rate(x.filter((m) => m.result === "WIN").length, x.length)} · ${x.length}戦`,
           ];
         })}
