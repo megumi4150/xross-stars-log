@@ -175,15 +175,27 @@ button.primary {
   grid-column: 2/4;
   width: 100px;
 }
-.leader-picked { display: flex; flex-wrap: wrap; gap: 5px; min-height: 28px; margin: 8px 0; }
-.leader-picked span { font-size: .72rem; color: #86e9ff; background: #12344b; border-radius: 999px; padding: 5px 8px; }
-.leader-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; max-height: 330px; overflow-y: auto; padding: 3px; }
-.leader-grid button { position: relative; min-height: 108px; padding: 3px; display: grid; grid-template-rows: 78px auto; gap: 3px; background: #091827; }
-.leader-grid button.chosen { border-color: #21ddff; box-shadow: 0 0 12px #21ddff88; }
-.leader-grid img, .card-fallback { width: 100%; height: 78px; object-fit: cover; border-radius: 5px; }
+.card-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+.card-buttons button { font-size: .78rem; text-align: left; }
+.card-buttons b { display: block; color: #5de0ff; font-size: 1.15rem; margin-top: 4px; }
+.selected-cards { margin: 10px 0; }
+.selected-cards > div { display: flex; gap: 6px; overflow-x: auto; padding-top: 5px; }
+.selected-cards span { position: relative; flex: 0 0 54px; height: 73px; border: 1px solid #2c506d; border-radius: 6px; background: #091827; overflow: hidden; }
+.selected-cards img { width: 100%; height: 100%; object-fit: cover; }
+.selected-cards b { position: absolute; left: 0; right: 0; bottom: 0; padding: 3px; font-size: .55rem; text-align: center; background: #06101cdd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.picker-backdrop { position: fixed; inset: 0; z-index: 10; background: #020810cc; display: flex; align-items: end; justify-content: center; padding: 10px; }
+.picker-modal { width: min(660px, 100%); max-height: calc(100dvh - 20px); overflow: auto; background: #0d1c2d; border: 1px solid #297494; border-radius: 18px; padding: 14px; box-shadow: 0 16px 45px #000b; }
+.picker-head { display: flex; justify-content: space-between; align-items: start; gap: 10px; }
+.close { border: 0; background: #24506a; border-radius: 50%; width: 38px; min-height: 38px; padding: 0; font-size: 1.8rem; line-height: 1; }
+.picker-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; max-height: 52dvh; overflow-y: auto; padding: 3px; }
+.picker-grid button { position: relative; min-height: 128px; padding: 3px; display: grid; grid-template-rows: 99px auto; gap: 3px; background: #091827; }
+.picker-grid button.chosen { border-color: #21ddff; box-shadow: 0 0 12px #21ddff88; }
+.picker-grid img, .card-fallback { width: 100%; height: 99px; object-fit: cover; border-radius: 5px; }
 .card-fallback { display: grid; place-items: center; color: #5ddfff; font-size: 1.5rem; background: #143149; }
-.leader-grid b { font-size: .62rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.leader-grid em { position: absolute; top: 5px; right: 5px; background: #00b7dc; color: #fff; font-style: normal; font-weight: bold; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; }
+.picker-grid b { font-size: .62rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.picker-grid em { position: absolute; top: 5px; right: 5px; background: #00b7dc; color: #fff; font-style: normal; font-weight: bold; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; }
+.picker-status { min-height: 160px; display: grid; place-items: center; color: #8ca5bd; }
+.picker-status.error { color: #ff9eb9; }
 .compact { padding: 14px; margin: 4px 0; font-size: .78rem; }
 .split,
 .actions {

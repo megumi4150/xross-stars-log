@@ -13,6 +13,7 @@ import {
   uid,
 } from "./types";
 import { OfficialXrossStarsAdapter, hashDeck } from "./deckAdapter";
+import { CardMasterKind, OfficialXrossStarsCardMasterAdapter } from "./cardMasterAdapter";
 import "./style.css";
 type Tab = "record" | "decks" | "analysis" | "settings";
 const today = () => new Date().toISOString().slice(0, 10);
@@ -99,10 +100,14 @@ function Recorder({
     [event, setEvent] = useState(""),
     [version, setVersion] = useState(data.versions[0]?.id || ""),
     [leaders, setLeaders] = useState<Card[]>([]),
-    [ace, setAce] = useState(""),
+    [aces, setAces] = useState<Card[]>([]),
     [r, setR] = useState<Round[]>([]),
     [firstOrder, setFirstOrder] = useState<"先攻" | "後攻" | "">(""),
-    [note, setNote] = useState("");
+    [note, setNote] = useState(""),
+    [picker, setPicker] = useState<CardMasterKind | "">(""),
+    [master, setMaster] = useState<Record<CardMasterKind, Card[]>>({ leader: [], ace: [] }),
+    [masterLoading, setMasterLoading] = useState(false),
+    [masterError, setMasterError] = useState("");
   const addRound = (result: "WIN" | "LOSE") => {
     if (r.filter((x) => x.result === result).length >= 2 || r.length >= 3)
       return;
@@ -126,7 +131,7 @@ function Recorder({
   };
   const reset = () => {
     setLeaders([]);
-    setAce("");
+    setAces([]);
     setR([]);
     setFirstOrder("");
     setNote("");
@@ -142,7 +147,7 @@ function Recorder({
         leaderIds: leaders.map((leader) => leader.id),
         leaders: leaders.map((leader) => leader.name),
         leaderCards: leaders,
-        aces: ace ? [{ cardId: ace, name: ace, count: "?" }] : [],
+        aces: aces.map((card) => ({ cardId: card.id, name: card.name, count: "?" })),
         displayLabel: leaders.map((leader) => leader.name).join(" / "),
         lastUsedAt: new Date().toISOString(),
       };
@@ -169,9 +174,17 @@ function Recorder({
     if (next) reset();
   };
   const v = data.versions.find((x) => x.id === version);
-  const leaderCatalog = Array.from(
-    new Map(data.versions.flatMap((deckVersion) => deckVersion.leaders).map((card) => [card.id, card])).values(),
-  );
+  const openPicker = async (kind: CardMasterKind) => {
+    setPicker(kind); setMasterError("");
+    if (master[kind].length) return;
+    setMasterLoading(true);
+    try {
+      const cards = await new OfficialXrossStarsCardMasterAdapter().list(kind);
+      setMaster((current) => ({ ...current, [kind]: cards }));
+    }
+    catch (error) { setMasterError(error instanceof Error ? error.message : "カード一覧を取得できませんでした"); }
+    finally { setMasterLoading(false); }
+  };
   return (
     <section>
       <h1>対戦を記録</h1>
@@ -237,13 +250,13 @@ function Recorder({
       </div>
       <div className="card">
         <h2>相手構成</h2>
-        <p className="hint">リーダー一覧から、相手の4枚を順に選択してください（{leaders.length}/4）</p>
-        <LeaderChoice cards={leaderCatalog} selected={leaders} onChange={setLeaders} />
-        <input
-          placeholder="ACE（不明なら空欄でOK）"
-          value={ace}
-          onChange={(e) => setAce(e.target.value)}
-        />
+        <p className="hint">使用カードを選択すると、公式カードマスターの画像一覧を開きます。</p>
+        <div className="card-buttons">
+          <button type="button" onClick={() => openPicker("leader")}>使用リーダーを選択 <b>{leaders.length}/4</b></button>
+          <button type="button" onClick={() => openPicker("ace")}>使用ACEを選択 <b>{aces.length}/2</b></button>
+        </div>
+        <SelectedCards label="使用リーダー" cards={leaders} />
+        <SelectedCards label="使用ACE" cards={aces} />
         {data.opponents.length > 0 && (
           <div className="chips">
             {data.opponents.slice(0, 4).map((o) => (
@@ -251,7 +264,7 @@ function Recorder({
                 key={o.id}
                 onClick={() => {
                   setLeaders(o.leaderCards || o.leaders.map((name, i) => ({ id: o.leaderIds[i] || `saved-${o.id}-${i}`, name, cardType: "leader" })));
-                  setAce(o.aces[0]?.name || "");
+                  setAces(o.aces.map((ace) => ({ id: ace.cardId, name: ace.name, cardType: "ace", isAce: true })));
                 }}
               >
                 最近: {o.displayLabel}
@@ -260,6 +273,7 @@ function Recorder({
           </div>
         )}
       </div>
+      {picker && <CardPickerModal title={picker === "leader" ? "使用リーダー" : "使用ACE"} kind={picker} cards={master[picker]} selected={picker === "leader" ? leaders : aces} max={picker === "leader" ? 4 : 2} loading={masterLoading} error={masterError} onClose={() => setPicker("")} onChange={(cards) => picker === "leader" ? setLeaders(cards) : setAces(cards)} />}
       <div className="card">
         <h2>
           Round <small>R2以降は前ラウンド敗者が先攻です</small>
@@ -634,31 +648,31 @@ function CardChoice({
     </div>
   );
 }
-function LeaderChoice({
-  cards,
-  selected,
-  onChange,
-}: {
-  cards: Card[];
-  selected: Card[];
-  onChange: (cards: Card[]) => void;
-}) {
-  if (!cards.length)
-    return <div className="empty compact">画像付きの公式デッキを登録すると、ここから相手リーダーを選べます。</div>;
-  const toggle = (card: Card) => {
+function SelectedCards({ label, cards }: { label:string; cards:Card[] }) {
+  if (!cards.length) return null;
+  return <div className="selected-cards"><small>{label}</small><div>{cards.map((card) => <span key={card.id}>{card.imageUrl && <img src={card.imageUrl} alt="" />}<b>{card.name}</b></span>)}</div></div>;
+}
+function CardPickerModal({
+  title, kind, cards, selected, max, loading, error, onClose, onChange,
+}: { title:string; kind:CardMasterKind; cards:Card[]; selected:Card[]; max:number; loading:boolean; error:string; onClose:()=>void; onChange:(cards:Card[])=>void }) {
+  const toggle = (card:Card) => {
     const exists = selected.some((selectedCard) => selectedCard.id === card.id);
     if (exists) onChange(selected.filter((selectedCard) => selectedCard.id !== card.id));
-    else if (selected.length < 4) onChange([...selected, card]);
+    else if (selected.length < max) onChange([...selected, card]);
   };
-  return <div className="leader-choice">
-    <div className="leader-picked">{selected.length ? selected.map((card) => <span key={card.id}>{card.name}</span>) : "未選択"}</div>
-    <div className="leader-grid">{cards.map((card) => {
-      const position = selected.findIndex((selectedCard) => selectedCard.id === card.id);
-      return <button type="button" key={card.id} className={position >= 0 ? "chosen" : ""} onClick={() => toggle(card)}>
-        {card.imageUrl ? <img src={card.imageUrl} alt={card.name} /> : <span className="card-fallback">◆</span>}
-        <b>{card.name}</b>{position >= 0 && <em>{position + 1}</em>}
-      </button>;
-    })}</div>
+  return <div className="picker-backdrop" role="dialog" aria-modal="true" aria-label={title}>
+    <div className="picker-modal">
+      <div className="picker-head"><div><h2>{title}</h2><small>{kind === "leader" ? "LRPのリーダーのみ" : "SRかつACEのカードのみ"} · {selected.length}/{max}</small></div><button type="button" className="close" onClick={onClose} aria-label="閉じる">×</button></div>
+      <SelectedCards label="選択中" cards={selected} />
+      {loading ? <p className="picker-status">公式カード一覧を読み込み中…</p> : error ? <p className="picker-status error">{error}</p> : <div className="picker-grid">{cards.map((card) => {
+        const position = selected.findIndex((selectedCard) => selectedCard.id === card.id);
+        return <button type="button" key={card.id} className={position >= 0 ? "chosen" : ""} onClick={() => toggle(card)}>
+          {card.imageUrl ? <img src={card.imageUrl} alt={card.name} /> : <span className="card-fallback">◆</span>}
+          <b>{card.name}</b>{position >= 0 && <em>{position + 1}</em>}
+        </button>;
+      })}</div>}
+      <button type="button" className="primary full" onClick={onClose}>決定</button>
+    </div>
   </div>;
 }
 function Report({ title, rows }: { title: string; rows: string[][] }) {

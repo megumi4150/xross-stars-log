@@ -1,4 +1,4 @@
-export type Card = { id:string; name:string; cardType:'leader'|'main'|'tactics'|'ace'; imageUrl?:string; isAce?:boolean };
+export type Card = { id:string; name:string; cardType:'leader'|'main'|'tactics'|'ace'; imageUrl?:string; isAce?:boolean; rarity?:string; color?:string };
 export type CardCount = Card & { count:number };
 export type AceCount = { cardId:string; name:string; count:number|'?' };
 export type Deck = {id:string;name:string;archived:boolean;createdAt:string;updatedAt:string};
