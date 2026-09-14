@@ -218,6 +218,30 @@ button.primary {
 .tactic-selected button { width: 100%; min-height: 54px; padding: 6px 10px; text-align: left; border-color: #25d8ff; background: #102942; }
 .tactic-selected b, .tactic-selected span { display: block; }.tactic-selected b { color: #5de0ff; }.tactic-selected span { font-size: .72rem; color: #8ca5bd; margin-top: 3px; }
 .tactics-grid { height: calc(100dvh - 332px); }
+
+/* Record screen: mirror the reference's light, rounded control surface. */
+.recorder { color: #303238; }
+.recorder h1, .recorder h2, .recorder small, .recorder .hint, .recorder label { color: #303238; }
+.recorder .card { background: #fff; border: 0; border-radius: 12px; box-shadow: 0 6px 13px #0003; }
+.recorder input, .recorder select, .recorder textarea { background: #fff; color: #303238; border-color: #d6d6d6; }
+.recorder .switch { background: #f5f5f5; border-radius: 9px; padding: 9px; }
+.recorder .card-buttons button { min-height: 58px; background: linear-gradient(180deg, #80dff2, #6388f2); color: #fff; border: 0; border-radius: 26px; text-align: center; box-shadow: 0 5px 10px #0003; }
+.recorder .card-buttons b { color: #fff; font-size: 1rem; }
+.recorder .order-question, .recorder .round-start { background: #fff; border: 0; box-shadow: 0 5px 10px #0002; }
+.recorder .round { background: #fff; border: 0; border-radius: 9px; margin: 8px 0; padding: 12px; box-shadow: 0 4px 9px #0002; }
+.recorder .round b, .recorder .round em { color: #353535; }
+.recorder .tactic-button { background: #fff; color: #353535; border: 0; box-shadow: 0 4px 9px #0002; }
+.recorder .tactic-button b { color: #3b7cec; }
+.recorder .actions { position: sticky; bottom: 75px; z-index: 2; padding: 9px 0; background: #f4f4f4e8; }
+.recorder .actions button { border: 0; border-radius: 28px; background: #7bdc66; color: #fff; font-size: 1.1rem; box-shadow: 0 5px 10px #0003; }
+.recorder .actions .primary { background: #7bdc66; }
+
+/* TACTICS artwork is landscape in the reference. Keep the card face only. */
+.tactics-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.tactics-grid button { aspect-ratio: 1.52; overflow: hidden; }
+.tactics-grid img { width: 100%; height: 100%; object-fit: cover; object-position: center; transform: rotate(90deg) scale(1.52); }
+.tactics-grid b { display: none; }
+.tactics-grid em { bottom: 50%; transform: translate(50%, 50%); }
 .compact { padding: 14px; margin: 4px 0; font-size: .78rem; }
 .split,
 .actions {

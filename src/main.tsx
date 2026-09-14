@@ -199,7 +199,7 @@ function Recorder({
     finally { setMasterLoading(false); }
   };
   return (
-    <section>
+    <section className="recorder">
       <h1>対戦を記録</h1>
       <p className="hint">試合中の入力はせず、終了後に記録します。</p>
       <div className="card">
