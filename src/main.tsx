@@ -507,12 +507,8 @@ function Decks({
 function Analysis({ data }: { data: AppData }) {
   const [filter, setFilter] = useState("");
   const versions = currentVersions(data);
-  const ms = data.matches.filter((m) => !filter || m.deckVersionId === filter),
-    wins = ms.filter((m) => m.result === "WIN").length,
-    rs = ms.flatMap((m) => m.rounds),
-    rw = rs.filter((r) => r.result === "WIN").length,
-    numericKillTurns = rs.map((r) => r.killTurn).filter((turn): turn is Exclude<NonNullable<Round["killTurn"]>, "Over"> => typeof turn === "number"),
-    avg = numericKillTurns.reduce((a, turn) => a + turn, 0) / (numericKillTurns.length || 1);
+  const ms = data.matches.filter((m) => !filter || m.deckVersionId === filter);
+  const wins = ms.filter((m) => m.result === "WIN").length;
   const group = (values: { key: string; win: boolean }[]) =>
     Object.entries(
       values.reduce<Record<string, [number, number]>>((a, x) => {
@@ -522,71 +518,31 @@ function Analysis({ data }: { data: AppData }) {
         return a;
       }, {}),
     );
-  return (
-    <section>
-      <h1>分析</h1>
-      <select value={filter} onChange={(e) => setFilter(e.target.value)}>
-        <option value="">すべてのデッキ</option>
-        {versions.map((v) => (
-          <option key={v.id} value={v.id}>
-            {data.decks.find((d) => d.id === v.deckId)?.name}
-          </option>
-        ))}
-      </select>
-      <div className="metrics">
-        <Metric label="総対戦" value={`${ms.length}`} />
-        <Metric label="Match 勝率" value={rate(wins, ms.length)} />
-        <Metric label="Round 勝率" value={rate(rw, rs.length)} />
-        <Metric
-          label="平均キルT"
-          value={numericKillTurns.length ? avg.toFixed(1) : "—"}
-        />
-      </div>
-      <Report
-        title="構築別"
-        rows={versions.map((v) => {
-          const x = ms.filter((m) => m.deckVersionId === v.id);
-          return [
-            data.decks.find((deck) => deck.id === v.deckId)?.name || "名称未設定デッキ",
-            `${rate(x.filter((m) => m.result === "WIN").length, x.length)} · ${x.length}戦`,
-          ];
-        })}
-      />
-      <Report
-        title="TACTICS（自分の選択）"
-        rows={group(
-          rs
-            .filter((r) => r.myTactic)
-            .map((r) => ({ key: r.myTactic!, win: r.result === "WIN" })),
-        ).map(([k, [n, w]]) => [k, `${rate(w, n)} · ${n}回`])}
-      />
-      <Report
-        title="対面 Leader"
-        rows={group(
-          ms.map((m) => ({
-            key:
-              data.opponents.find((o) => o.id === m.opponentId)?.displayLabel ||
-              "未登録",
-            win: m.result === "WIN",
-          })),
-        ).map(([k, [n, w]]) => [k, `${rate(w, n)} · ${n}戦`])}
-      />
-      <Report
-        title="先攻 / 後攻"
-        rows={group(
-          rs.map((r) => ({ key: r.order, win: r.result === "WIN" })),
-        ).map(([k, [n, w]]) => [k, `${rate(w, n)} · ${n}R`])}
-      />
-    </section>
-  );
+  const firstOrder = group(ms.flatMap((match) => match.rounds[0] ? [{ key: match.rounds[0].order, win: match.result === "WIN" }] : []));
+  const sequences = group(ms.flatMap((match) => {
+    const sequence = match.rounds.filter((round) => round.myTactic).map((round) => round.myTactic).join(" → ");
+    return sequence ? [{ key: sequence, win: match.result === "WIN" }] : [];
+  })).sort((a, b) => b[1][0] - a[1][0]);
+  const deckRows = versions.map((version) => {
+    const matches = ms.filter((match) => match.deckVersionId === version.id), deckWins = matches.filter((match) => match.result === "WIN").length;
+    return { name: data.decks.find((deck) => deck.id === version.deckId)?.name || "名称未設定デッキ", total: matches.length, wins: deckWins };
+  }).filter((row) => row.total > 0);
+  return <section className="analysis-screen">
+    <div className="analysis-head"><div><h1>分析</h1><p>試合の傾向を、現在のデッキと選択TACTICSから確認します。</p></div><label>対象デッキ<select value={filter} onChange={(e) => setFilter(e.target.value)}><option value="">すべてのデッキ</option>{versions.map((version) => <option key={version.id} value={version.id}>{data.decks.find((deck) => deck.id === version.deckId)?.name}</option>)}</select></label></div>
+    <AnalyticsCard title="総合戦績"><div className="analysis-metrics"><AnalysisMetric label="対戦" value={`${ms.length}`} /><AnalysisMetric label="勝率" value={rate(wins, ms.length)} accent /><AnalysisMetric label="勝" value={`${wins}`} /><AnalysisMetric label="負" value={`${ms.length - wins}`} danger /></div><RateBar wins={wins} total={ms.length} /></AnalyticsCard>
+    <AnalyticsCard title="先攻・後攻別勝率" description="R1の先攻／後攻で分類し、試合全体の勝敗で集計します。"><div className="first-order-grid">{(["先攻", "後攻"] as const).map((order) => { const entry = firstOrder.find(([key]) => key === order)?.[1] || [0, 0]; return <div key={order}><small>{order}</small><b>{rate(entry[1], entry[0])}</b><span>{entry[0]}戦 {entry[1]}勝 {entry[0] - entry[1]}敗</span></div>; })}</div></AnalyticsCard>
+    <AnalyticsCard title="選択したTACTICS別勝率" description="自分のTACTICSをR1 → R2 → R3の順番で、試合ごとに1セットとして集計します。">{sequences.length ? <div className="analysis-rows">{sequences.map(([sequence, [total, sequenceWins]]) => <div key={sequence}><div><b>{sequence}</b><strong>{rate(sequenceWins, total)}</strong></div><small>{total}戦 {sequenceWins}勝 {total - sequenceWins}敗</small><RateBar wins={sequenceWins} total={total} /></div>)}</div> : <div className="analysis-empty">TACTICSを選択した対戦を記録すると、ここに傾向が表示されます。</div>}</AnalyticsCard>
+    {!filter && <AnalyticsCard title="デッキ別成績">{deckRows.length ? <div className="analysis-rows">{deckRows.map((row) => <div key={row.name}><div><b>{row.name}</b><strong>{rate(row.wins, row.total)}</strong></div><small>{row.total}戦 {row.wins}勝 {row.total - row.wins}敗</small><RateBar wins={row.wins} total={row.total} /></div>)}</div> : <div className="analysis-empty">記録を追加すると、デッキ別の成績が表示されます。</div>}</AnalyticsCard>}
+  </section>;
 }
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <small>{label}</small>
-      <b>{value}</b>
-    </div>
-  );
+function AnalyticsCard({ title, description, children }: { title:string; description?:string; children:React.ReactNode }) {
+  return <section className="analysis-card"><h2>{title}</h2>{description && <p>{description}</p>}{children}</section>;
+}
+function AnalysisMetric({ label, value, accent, danger }: { label:string; value:string; accent?:boolean; danger?:boolean }) {
+  return <div className={accent ? "accent" : danger ? "danger" : ""}><small>{label}</small><b>{value}</b></div>;
+}
+function RateBar({ wins, total }: { wins:number; total:number }) {
+  return <div className="rate-bar" aria-label={`${wins}勝 ${total - wins}敗`}><span style={{ width: `${total ? (wins / total) * 100 : 0}%` }} /></div>;
 }
 function TacticButton({ label, selected, onClick }: {label:string;selected?:string;onClick:()=>void}) {
   return <button type="button" className="tactic-button" onClick={onClick}><small>{label}</small><b>{selected || "選択する"}</b></button>;
