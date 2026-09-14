@@ -656,7 +656,7 @@ function CardPickerModal({
   title, kind, cards, selected, max, loading, error, onClose, onKindChange, onChange,
 }: { title:string; kind:CardMasterKind; cards:Card[]; selected:Card[]; max:number; loading:boolean; error:string; onClose:()=>void; onKindChange:(kind:CardMasterKind)=>void; onChange:(cards:Card[])=>void }) {
   const [color, setColor] = useState("all");
-  const colors = [["all", "すべて"], ["red", "赤"], ["blue", "青"], ["yellow", "黄"], ["green", "緑"], ["colorless", "無"]] as const;
+  const colors = [["all", "すべて"], ["red", "赤"], ["blue", "青"], ["yellow", "黄"], ["green", "緑"]] as const;
   const visibleCards = color === "all" ? cards : cards.filter((card) => card.color === color);
   const toggle = (card:Card) => {
     const exists = selected.some((selectedCard) => selectedCard.id === card.id);

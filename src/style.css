@@ -198,8 +198,8 @@ button.primary {
 .color-filter button { min-height: 45px; padding: 6px 4px; white-space: nowrap; font-size: 1rem; font-weight: 700; color: #303030; background: #fff; border: 0; border-radius: 10px; box-shadow: 0 5px 10px #0002; }
 .color-filter button.selected { color: #f57a35; box-shadow: inset 0 -3px #f57a35, 0 5px 10px #0002; }
 .color-filter .red.selected { color: #e84e4e; box-shadow: inset 0 -3px #e84e4e, 0 5px 10px #0002; }.color-filter .blue.selected { color: #3f6df2; box-shadow: inset 0 -3px #3f6df2, 0 5px 10px #0002; }.color-filter .yellow.selected { color: #d9a900; box-shadow: inset 0 -3px #d9a900, 0 5px 10px #0002; }.color-filter .green.selected { color: #4aab44; box-shadow: inset 0 -3px #4aab44, 0 5px 10px #0002; }
-.picker-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; height: calc(100dvh - 344px); min-height: 280px; overflow-y: auto; padding: 4px 9px 12px; scrollbar-color: #5ed3e7 #555; }
-.picker-grid button { position: relative; aspect-ratio: .69; min-height: 0; padding: 3px; display: block; background: #fff; border: 2px solid #fff; border-radius: 5px; box-shadow: 0 2px 6px #0005; }
+.picker-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: max-content; align-content: start; gap: 7px; height: calc(100dvh - 302px); min-height: 280px; overflow-y: auto; padding: 4px 9px 12px; scrollbar-color: #5ed3e7 #555; }
+.picker-grid button { position: relative; width: 100%; aspect-ratio: .69; min-height: 0; padding: 3px; display: block; background: #fff; border: 2px solid #fff; border-radius: 5px; box-shadow: 0 2px 6px #0005; }
 .picker-grid button.chosen { border-color: #fff; box-shadow: 0 0 0 2px #333, 0 2px 7px #0007; }
 .picker-grid img, .card-fallback { width: 100%; height: 100%; object-fit: cover; object-position: center 12%; border-radius: 3px; }
 .card-fallback { display: grid; place-items: center; color: #5ddfff; font-size: 1.5rem; background: #143149; }
