@@ -253,7 +253,7 @@ function Recorder({
         <p className="hint">使用カードを選択すると、公式カードマスターの画像一覧を開きます。</p>
         <div className="card-buttons">
           <button type="button" onClick={() => openPicker("leader")}>使用リーダーを選択 <b>{leaders.length}/4</b></button>
-          <button type="button" onClick={() => openPicker("ace")}>使用ACEを選択 <b>{aces.length}/2</b></button>
+          <button type="button" onClick={() => openPicker("ace")}>使用ACEを選択 <b>{aces.length}/8</b></button>
         </div>
         <SelectedCards label="使用リーダー" cards={leaders} />
         <SelectedCards label="使用ACE" cards={aces} />
@@ -273,7 +273,7 @@ function Recorder({
           </div>
         )}
       </div>
-      {picker && <CardPickerModal title={picker === "leader" ? "使用リーダー" : "使用ACE"} kind={picker} cards={master[picker]} selected={picker === "leader" ? leaders : aces} max={picker === "leader" ? 4 : 2} loading={masterLoading} error={masterError} onClose={() => setPicker("")} onKindChange={openPicker} onChange={(cards) => picker === "leader" ? setLeaders(cards) : setAces(cards)} />}
+      {picker && <CardPickerModal title={picker === "leader" ? "使用リーダー" : "使用ACE"} kind={picker} cards={master[picker]} selected={picker === "leader" ? leaders : aces} max={picker === "leader" ? 4 : 8} loading={masterLoading} error={masterError} onClose={() => setPicker("")} onKindChange={openPicker} onChange={(cards) => picker === "leader" ? setLeaders(cards) : setAces(cards)} />}
       <div className="card">
         <h2>
           Round <small>R2以降は前ラウンド敗者が先攻です</small>
