@@ -655,6 +655,9 @@ function SelectedCards({ label, cards }: { label:string; cards:Card[] }) {
 function CardPickerModal({
   title, kind, cards, selected, max, loading, error, onClose, onChange,
 }: { title:string; kind:CardMasterKind; cards:Card[]; selected:Card[]; max:number; loading:boolean; error:string; onClose:()=>void; onChange:(cards:Card[])=>void }) {
+  const [color, setColor] = useState("all");
+  const colors = [["all", "すべて"], ["red", "赤"], ["blue", "青"], ["yellow", "黄"], ["green", "緑"], ["colorless", "無"]] as const;
+  const visibleCards = color === "all" ? cards : cards.filter((card) => card.color === color);
   const toggle = (card:Card) => {
     const exists = selected.some((selectedCard) => selectedCard.id === card.id);
     if (exists) onChange(selected.filter((selectedCard) => selectedCard.id !== card.id));
@@ -664,7 +667,8 @@ function CardPickerModal({
     <div className="picker-modal">
       <div className="picker-head"><div><h2>{title}</h2><small>{kind === "leader" ? "LRPのリーダーのみ" : "SRかつACEのカードのみ"} · {selected.length}/{max}</small></div><button type="button" className="close" onClick={onClose} aria-label="閉じる">×</button></div>
       <SelectedCards label="選択中" cards={selected} />
-      {loading ? <p className="picker-status">公式カード一覧を読み込み中…</p> : error ? <p className="picker-status error">{error}</p> : <div className="picker-grid">{cards.map((card) => {
+      <div className="color-filter">{colors.map(([id, label]) => <button key={id} type="button" className={color === id ? `selected ${id}` : id} onClick={() => setColor(id)}>{label}</button>)}</div>
+      {loading ? <p className="picker-status">公式カード一覧を読み込み中…</p> : error ? <p className="picker-status error">{error}</p> : <div className="picker-grid">{visibleCards.map((card) => {
         const position = selected.findIndex((selectedCard) => selectedCard.id === card.id);
         return <button type="button" key={card.id} className={position >= 0 ? "chosen" : ""} onClick={() => toggle(card)}>
           {card.imageUrl ? <img src={card.imageUrl} alt={card.name} /> : <span className="card-fallback">◆</span>}
