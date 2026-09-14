@@ -14,6 +14,7 @@ import {
 } from "./types";
 import { OfficialXrossStarsAdapter, hashDeck } from "./deckAdapter";
 import { CardMasterKind, OfficialXrossStarsCardMasterAdapter } from "./cardMasterAdapter";
+import "./tokens.css";
 import "./style.css";
 type Tab = "record" | "decks" | "analysis" | "settings";
 const today = () => new Date().toISOString().slice(0, 10);

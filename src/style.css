@@ -457,3 +457,60 @@ nav i {
 .card-choice button.chosen { border-color: #21ddff; box-shadow: 0 0 12px #21ddff88; }
 .card-choice img { width: 48px; height: 47px; object-fit: cover; border-radius: 5px; }
 .card-choice b { font-size: .58rem; white-space: nowrap; max-width: 58px; overflow: hidden; text-overflow: ellipsis; }
+
+/* Application-wide system — all component colors resolve to src/tokens.css. */
+:root { font-family: var(--font-ui); color: var(--color-bone-text); background: var(--color-slate-canvas); }
+body { color: var(--color-bone-text); background: var(--color-slate-canvas); }
+header, nav { background: var(--color-slate-canvas); border-color: var(--color-steel-border); box-shadow: none; }
+header b, header small, .mark, nav button, nav button.active, small, p, .hint { color: var(--color-fog-text); }
+.mark, nav button.active { color: var(--color-signal-lime); }
+h1, h2, h3, b, strong { color: var(--color-bone-text); }
+h1, h2 { font-family: var(--font-display); font-weight: 600; letter-spacing: .025em; }
+label { color: var(--color-cloud-text); }
+.card, .empty, .metrics div { color: var(--color-bone-text); background: var(--color-slate-canvas); border-color: var(--color-steel-border); border-radius: var(--radius); box-shadow: none; }
+input, select, textarea { color: var(--color-bone-text); background: var(--color-ink-well); border-color: var(--color-graphite-hairline); border-radius: var(--radius); }
+button, .file { color: var(--color-cloud-text); background: transparent; border-color: var(--color-graphite-hairline); border-radius: var(--radius); box-shadow: none; }
+button:hover, .file:hover { border-color: var(--color-graphite-hairline); color: var(--color-bone-text); }
+button.primary, .picker-confirm, .recorder .actions button, .recorder .actions .primary { color: var(--color-ink-well); background: var(--color-signal-lime); border: 0; box-shadow: inset 0 0 0 1px rgb(168 255 83 / 15%); }
+.toast { color: var(--color-ink-well); background: var(--color-signal-lime); border-radius: var(--radius-pill); box-shadow: none; }
+
+/* Recorder */
+.recorder, .recorder h1, .recorder h2, .recorder small, .recorder .hint, .recorder label { color: var(--color-bone-text); }
+.recorder .card, .recorder .round, .recorder .tactic-button, .recorder .order-question, .recorder .round-start { color: var(--color-bone-text); background: var(--color-slate-canvas); border-color: var(--color-steel-border); border-radius: var(--radius); box-shadow: none; }
+.recorder input, .recorder select, .recorder textarea, .recorder .switch { color: var(--color-bone-text); background: var(--color-ink-well); border-color: var(--color-graphite-hairline); border-radius: var(--radius); }
+.recorder .card-buttons button { color: var(--color-ink-well); background: var(--color-signal-lime); border: 0; border-radius: var(--radius); box-shadow: none; }
+.recorder .card-buttons b, .recorder .round b, .recorder .round em, .recorder .tactic-button b { color: var(--color-bone-text); }
+.recorder .actions { background: color-mix(in srgb, var(--color-slate-canvas) 94%, transparent); }
+.win { color: var(--color-signal-lime) !important; border-color: var(--color-signal-lime) !important; }
+.lose, .danger { color: var(--color-mute-red) !important; border-color: var(--color-mute-red) !important; }
+.undo { color: var(--color-fog-text); border-color: var(--color-steel-border); }
+.kill-turn button { color: var(--color-cloud-text); border-color: var(--color-graphite-hairline); border-radius: var(--radius); }
+.kill-turn button.selected { color: var(--color-ink-well); background: var(--color-signal-lime); }
+
+/* Card pickers */
+.picker-backdrop, .picker-modal { color: var(--color-bone-text); background: var(--color-slate-canvas); }
+.picker-head h2, .picker-head small, .tactics-modal .picker-head small { color: var(--color-bone-text); }
+.picker-head small, .picker-status { color: var(--color-fog-text); }.picker-status.error { color: var(--color-mute-red); }
+.close { color: var(--color-ink-well); background: var(--color-signal-lime); border: 0; border-radius: var(--radius-pill); box-shadow: none; }
+.picker-slots, .tactic-selected { background: var(--color-slate-canvas); border-color: var(--color-steel-border); border-radius: var(--radius); box-shadow: none; }
+.picker-slots button, .tactic-selected button, .picker-grid button { background: var(--color-ink-well); border-color: var(--color-graphite-hairline); border-radius: var(--radius); box-shadow: none; }
+.picker-slots span, .picker-grid em { color: var(--color-ink-well); background: var(--color-signal-lime); box-shadow: none; }
+.picker-grid button.chosen { border-color: var(--color-signal-lime); box-shadow: inset 0 0 0 1px var(--color-signal-lime); }
+.color-filter button, .picker-tabs { color: var(--color-cloud-text); background: var(--color-ink-well); border-color: var(--color-steel-border); border-radius: var(--radius); box-shadow: none; }
+.color-filter button.selected, .color-filter .red.selected, .color-filter .blue.selected, .color-filter .yellow.selected, .color-filter .green.selected { color: var(--color-signal-lime); border-color: var(--color-signal-lime); box-shadow: inset 0 -2px var(--color-signal-lime); }
+.picker-tabs button { color: var(--color-fog-text); }.picker-tabs button.active { color: var(--color-bone-text); box-shadow: inset 0 -3px var(--color-signal-lime); }
+
+/* Deck manager */
+.deck-screen { color: var(--color-bone-text); background: var(--color-slate-canvas); }
+.deck-tabs button, .deck-list-tools select, .deck-list-tools input, .deck-detail-head button, .deck-form input, .deck-form textarea { color: var(--color-cloud-text); background: var(--color-ink-well); border-color: var(--color-steel-border); border-radius: var(--radius); }
+.deck-tabs button.active { color: var(--color-signal-lime); background: var(--color-slate-canvas); border-color: var(--color-signal-lime); }
+.deck-add, .deck-detail-head .primary { color: var(--color-ink-well); background: var(--color-signal-lime); border: 0; border-radius: var(--radius); }
+.deck-list-tools, .deck-empty, .deck-empty small, .deck-form label, .deck-form small, .deck-image-upload, .deck-performance { color: var(--color-fog-text); }
+.deck-row { color: var(--color-bone-text); background: var(--color-slate-canvas); border-color: var(--color-steel-border); border-radius: var(--radius); }
+.deck-row:hover { background: var(--color-ink-well); border-color: var(--color-graphite-hairline); }.deck-row b, .deck-detail-head h1, .deck-empty b, .deck-performance b { color: var(--color-bone-text); }.deck-row strong { color: var(--color-signal-lime); }.deck-row small, .deck-row i { color: var(--color-fog-text); }
+.deck-thumb { color: var(--color-fog-text); background: var(--color-ink-well); border-color: var(--color-steel-border); border-radius: var(--radius); }.deck-rate { background: var(--color-steel-border); }.deck-rate span { background: var(--color-signal-lime); }
+.deck-visual { background: var(--color-ink-well); border: 1px solid var(--color-steel-border); border-radius: var(--radius); }.deck-card-preview > span { color: var(--color-ash-text); background: var(--color-slate-canvas); border-color: var(--color-graphite-hairline); border-radius: var(--radius); }
+.deck-image-upload span { color: var(--color-cloud-text); background: var(--color-ink-well); border-color: var(--color-graphite-hairline); border-radius: var(--radius); }.deck-performance { background: var(--color-ink-well); border: 1px solid var(--color-steel-border); border-radius: var(--radius); }
+
+/* Analysis and settings */
+.metrics b, .report b { color: var(--color-signal-lime); }.report > div, .round, .card-choice { border-color: var(--color-steel-border); }.file { color: var(--color-cloud-text); background: var(--color-ink-well); border-color: var(--color-graphite-hairline); border-radius: var(--radius); }.card-choice button { background: var(--color-ink-well); border-color: var(--color-graphite-hairline); border-radius: var(--radius); }.card-choice button.chosen { border-color: var(--color-signal-lime); box-shadow: inset 0 0 0 1px var(--color-signal-lime); }

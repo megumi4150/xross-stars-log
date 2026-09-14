@@ -1,0 +1,29 @@
+:root {
+  --color-slate-canvas: #1c1e21;
+  --color-ink-well: #121317;
+  --color-graphite-hairline: #3b3e45;
+  --color-steel-border: #272a2e;
+  --color-ash-text: #b5b8c0;
+  --color-fog-text: #878c99;
+  --color-cloud-text: #d7d9dd;
+  --color-bone-text: #e5e7eb;
+  --color-signal-lime: #a8ff53;
+  --color-syntax-violet: #9c9af2;
+  --color-syntax-pink: #fa3abf;
+  --color-event-violet: #7655fd;
+  --color-loop-green: #afec73;
+  --color-key-lime: #d9f07c;
+  --color-tag-magenta: #e888f8;
+  --color-mute-red: #f43f5e;
+
+  --font-display: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-ui: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+  --radius: 4px;
+  --radius-pill: 9999px;
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-24: 24px;
+}
